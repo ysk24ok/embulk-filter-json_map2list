@@ -1,0 +1,2 @@
+1	{"kind":"person","fullName":"John Doe","age":22,"gender":"Male","phoneNumber":{"areaCode":"206","number":"1234567"},"children":{"Jane":{"gender":"Female","age":"6"},"John":{"gender":"Male","age":"15"}},"citiesLived":{"Seattle":{"yearsLived":["1995"]},"Stockholm":{"yearsLived":["2005"]}}}
+2	{"kind":"person","fullName":"Anna Karenina","age":45,"gender":"Female","phoneNumber":{"areaCode":"425","number":"1984783"},"citiesLived":{"Stockholm":{"yearsLived":["1992","1998","2000","2010"]},"Russia":{"yearsLived":["1998","2001","2005"]},"Austin":{"yearsLived":["1995","1999"]}}}

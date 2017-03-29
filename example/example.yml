@@ -1,0 +1,22 @@
+in:
+  type: file
+  path_prefix: example/example.tsv
+  parser:
+    type: csv
+    delimiter: "\t"
+    charset: UTF-8
+    columns:
+      - {name: "id", type: "long"}
+      - {name: "json_payload", type: "string"}
+filters:
+  - type: stdout
+  - type: json_map2list
+    json_column_name: json_payload
+    target_key_path: children
+    key_name: name
+#- type: json_map2list
+# json_column_name: json_payload
+# target_key: citiesLived
+# key_name: place
+out:
+  type: stdout
