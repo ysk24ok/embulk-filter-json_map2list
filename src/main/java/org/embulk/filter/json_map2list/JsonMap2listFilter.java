@@ -1,6 +1,7 @@
 package org.embulk.filter.json_map2list;
 
 import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.PathNotFoundException;
 import com.jayway.jsonpath.ReadContext;
 import com.jayway.jsonpath.ParseContext;
 
@@ -27,7 +28,14 @@ public class JsonMap2listFilter
         String targetKeyPath = task.getTargetKeyPath();
         String keyName = task.getKeyName();
         String jsonPath = String.format("$.%s", targetKeyPath);
-        Map<String, Map> m = JsonPath.parse(json).read(jsonPath);
+        Map<String, Map> m = null;
+        try {
+            m = JsonPath.parse(json).read(jsonPath);
+        }
+        // if the key does not exist in json
+        catch (PathNotFoundException ex){
+            return json;
+        }
         List<Map> l = new ArrayList<Map>();
         for (Map.Entry<String, Map> entry: m.entrySet()) {
             entry.getValue().put(keyName, entry.getKey());
