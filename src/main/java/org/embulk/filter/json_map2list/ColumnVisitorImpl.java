@@ -1,7 +1,11 @@
 package org.embulk.filter.json_map2list;
 
+import org.embulk.filter.json_map2list.JsonMap2listFilterPlugin.PluginTask;
 import org.embulk.spi.Column;
 import org.embulk.spi.ColumnVisitor;
+import org.embulk.spi.DataException;
+import org.embulk.spi.json.JsonParser;
+import org.embulk.spi.json.JsonParseException;
 import org.embulk.spi.PageBuilder;
 import org.embulk.spi.PageReader;
 import org.msgpack.value.Value;
@@ -11,85 +15,102 @@ public class ColumnVisitorImpl implements ColumnVisitor
     private final PageReader pageReader;
     private final PageBuilder pageBuilder;
     private final JsonMap2listFilter filter;
+    private final PluginTask task;
+    private final JsonParser jsonParser;
 
-    ColumnVisitorImpl(PageReader reader, PageBuilder builder, JsonMap2listFilter filter)
+    ColumnVisitorImpl(PageReader reader, PageBuilder builder, JsonMap2listFilter filter, PluginTask task)
     {
         this.pageReader = reader;
         this.pageBuilder = builder;
         this.filter = filter;
+        this.task = task;
+        this.jsonParser = new JsonParser();
     }
 
     @Override
-    public void booleanColumn(Column outputColumn)
+    public void booleanColumn(Column column)
     {
-        if (pageReader.isNull(outputColumn)) {
-            pageBuilder.setNull(outputColumn);
+        if (pageReader.isNull(column)) {
+            pageBuilder.setNull(column);
         }
         else {
-            pageBuilder.setBoolean(
-                outputColumn, pageReader.getBoolean(outputColumn));
-        }
-    }
-
-    @Override
-    public void longColumn(Column outputColumn)
-    {
-        if (pageReader.isNull(outputColumn)) {
-            pageBuilder.setNull(outputColumn);
-        }
-        else {
-            pageBuilder.setLong(
-                outputColumn, pageReader.getLong(outputColumn));
+            pageBuilder.setBoolean(column, pageReader.getBoolean(column));
         }
     }
 
     @Override
-    public void doubleColumn(Column outputColumn)
+    public void longColumn(Column column)
     {
-        if (pageReader.isNull(outputColumn)) {
-            pageBuilder.setNull(outputColumn);
+        if (pageReader.isNull(column)) {
+            pageBuilder.setNull(column);
         }
         else {
-            pageBuilder.setDouble(
-                outputColumn, pageReader.getDouble(outputColumn));
+            pageBuilder.setLong(column, pageReader.getLong(column));
         }
     }
 
     @Override
-    public void stringColumn(Column outputColumn)
+    public void doubleColumn(Column column)
     {
-        if (pageReader.isNull(outputColumn)) {
-            pageBuilder.setNull(outputColumn);
+        if (pageReader.isNull(column)) {
+            pageBuilder.setNull(column);
         }
         else {
-            String outputValue = filter.doFilter(
-                outputColumn, pageReader.getString(outputColumn));
-            pageBuilder.setString(outputColumn, outputValue);
+            pageBuilder.setDouble(column, pageReader.getDouble(column));
         }
     }
 
     @Override
-    public void timestampColumn(Column outputColumn)
+    public void stringColumn(Column column)
     {
-        if (pageReader.isNull(outputColumn)) {
-            pageBuilder.setNull(outputColumn);
+        if (pageReader.isNull(column)) {
+            pageBuilder.setNull(column);
         }
         else {
-            pageBuilder.setTimestamp(
-                outputColumn, pageReader.getTimestamp(outputColumn));
+            if (column.getName().equals(task.getJsonColumnName())) {
+                String inputValue = pageReader.getString(column);
+                String outputValue = filter.doFilter(inputValue);
+                pageBuilder.setString(column, outputValue);
+            // do nothing if this column is not the target one
+            } else {
+                pageBuilder.setString(column, pageReader.getString(column));
+            }
         }
     }
 
     @Override
-    public void jsonColumn(Column outputColumn)
+    public void timestampColumn(Column column)
     {
-        if (pageReader.isNull(outputColumn)) {
-            pageBuilder.setNull(outputColumn);
+        if (pageReader.isNull(column)) {
+            pageBuilder.setNull(column);
         }
         else {
-            // TODO: works when the column is json
-            pageBuilder.setJson(
-                outputColumn, pageReader.getJson(outputColumn));
+            pageBuilder.setTimestamp(column, pageReader.getTimestamp(column));
+        }
+    }
+
+    @Override
+    public void jsonColumn(Column column)
+    {
+        if (pageReader.isNull(column)) {
+            pageBuilder.setNull(column);
+        }
+        else {
+            if (column.getName().equals(task.getJsonColumnName())) {
+                String inputValue = pageReader.getJson(column).toString();
+                String outputValue = filter.doFilter(inputValue);
+                Value outputValueAsJson = null;
+                try {
+                    outputValueAsJson = jsonParser.parse(outputValue);
+                }
+                catch (JsonParseException ex){
+                    throw new DataException(ex);
+                }
+                pageBuilder.setJson(column, outputValueAsJson);
+            }
+            else {
+                pageBuilder.setJson(column, pageReader.getJson(column));
+            }
         }
     }
 }

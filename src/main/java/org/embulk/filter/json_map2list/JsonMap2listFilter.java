@@ -22,14 +22,8 @@ public class JsonMap2listFilter
         this.task = task;
     }
 
-    public String doFilter(Column column, String json)
+    public String doFilter(String json)
     {
-        String colName = column.getName();
-        String targetColName = task.getJsonColumnName();
-        // do nothing if this column is not the target
-        if (!(colName.equals(targetColName))) {
-            return json;
-        }
         String targetKeyPath = task.getTargetKeyPath();
         String keyName = task.getKeyName();
         String jsonPath = String.format("$.%s", targetKeyPath);

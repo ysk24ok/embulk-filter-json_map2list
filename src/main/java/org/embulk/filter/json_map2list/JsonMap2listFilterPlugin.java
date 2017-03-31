@@ -52,7 +52,7 @@ public class JsonMap2listFilterPlugin
         PageReader pageReader = new PageReader(inputSchema);
         JsonMap2listFilter filter = new JsonMap2listFilter(task);
         ColumnVisitorImpl visitor = new ColumnVisitorImpl(
-            pageReader, pageBuilder, filter);
+            pageReader, pageBuilder, filter, task);
         return new PageOutputImpl(
             pageReader, pageBuilder, outputSchema, visitor);
     }
